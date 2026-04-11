@@ -2,6 +2,9 @@
 
 An AI-powered health management platform that helps users track their health, analyze medical images, get AI-powered health insights, and connect with healthcare professionals.
 
+## Architecture Diagram
+<img width="1908" height="2472" alt="image" src="https://github.com/user-attachments/assets/ebb249c8-d1ee-4f38-843d-5ff450c08be5" />
+
 ## ✨ Features
 
 - **AI Health Chatbot**: Get personalized health advice powered by AI with RAG (Retrieval-Augmented Generation)
