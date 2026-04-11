@@ -64,3 +64,4 @@ bun.lockb
 *.tmp
 *.temp
 .cache/
+.env
