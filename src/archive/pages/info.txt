@@ -1,0 +1,131 @@
+PROJECT NAME:
+MediQ – AI-Powered Health Screening & Unified Health Record Platform
+
+
+TAGLINE OPTIONS:
+• Early health screening. Clear answers. Smarter care.
+• AI-powered healthcare, designed for trust and clarity.
+• Your AI health companion for early screening and continuity of care.
+
+
+HERO SECTION (LANDING PAGE):
+
+Headline:
+MediQ
+
+Subheadline:
+Early health screening. Clear answers. Smarter care.
+
+Hero Description:
+MediQ is an AI-powered healthcare platform designed for early-stage health screening using symptom analysis and medical imaging. It helps users identify potential health risks, generate structured medical reports, and maintain a unified health record for better continuity of care across consultations.
+
+Primary CTA Button:
+Scan Medical Image
+
+Secondary CTA / Link:
+View AI Safety & Usage Standards
+
+Trust Disclaimer (small text):
+MediQ provides AI-based preliminary screening and does not replace professional medical diagnosis.
+
+
+NAVIGATION MENU ITEMS:
+• Features
+• Standards
+• Doctor Portal
+• Login
+
+
+FEATURES SECTION:
+
+Feature 1 – Symptom-Based AI Assistant:
+Users can describe their symptoms through a conversational AI assistant that asks relevant follow-up questions and provides preliminary health insights based on trusted medical knowledge.
+
+Feature 2 – Medical Image Screening:
+MediQ supports AI-assisted screening of medical images such as chest X-rays and skin lesion scans to identify potential abnormalities at an early stage.
+
+Feature 3 – Explainable AI (Grad-CAM):
+For abnormal scan results, MediQ provides visual heatmaps that highlight regions influencing the AI’s decision, improving transparency and user trust.
+
+Feature 4 – Unified Health ID:
+Each user is assigned a unique Health ID that securely stores and links their medical history, reports, and scan results across visits and doctors.
+
+Feature 5 – Automated Medical Reports:
+The platform generates structured, easy-to-understand medical reports that can be shared directly with doctors or healthcare providers.
+
+Feature 6 – Doctor & Hospital Recommendations:
+Based on symptoms and screening results, MediQ suggests nearby hospitals, clinics, and doctors for further consultation.
+
+
+MOBILE APP / DASHBOARD CONTENT:
+
+Greeting Example:
+Good Evening, Tanish
+
+User Info Card:
+Health ID: UHI-DB8855DD7AC5AF92
+Age: 18 yrs
+Blood Group: B+
+
+Chat Input Placeholder:
+Describe your symptoms or health concern…
+
+Quick Actions:
+• Check Symptoms
+• Scan Medical Image
+• Medication Information
+
+
+DOCTOR PORTAL SECTION:
+
+Doctor Portal Description:
+MediQ provides a dedicated doctor portal that allows healthcare professionals to securely access patient reports and medical history (with consent), add diagnoses, prescriptions, and follow-up notes, and streamline patient care.
+
+Doctor Portal Capabilities:
+• View patient history via Health ID
+• Access AI-generated reports and scans
+• Add clinical notes and prescriptions
+• Support continuity of care
+
+
+AI STANDARDS & SAFETY SECTION:
+
+AI Safety Statement:
+MediQ uses AI strictly for preliminary health screening and decision support. All AI outputs are explainable, transparent, and designed to assist—not replace—qualified medical professionals.
+
+Privacy & Security:
+• Secure authentication and role-based access
+• Patient-controlled data sharing
+• Encrypted storage of medical data
+• No unauthorized access to health records
+
+
+ABOUT MEDIQ (OPTIONAL SECTION):
+
+About Description:
+MediQ is built to address gaps in early healthcare access by combining artificial intelligence, explainable medical imaging, and unified health records into a single, easy-to-use platform. The system prioritizes accessibility, transparency, and real-world feasibility.
+
+TECHNOLOGY OVERVIEW (HIGH-LEVEL):
+
+Backend:
+FastAPI-based backend handling authentication, data management, and AI inference.
+
+AI Models:
+• CNN-based models for medical image screening
+• RAG-powered conversational AI for symptom analysis
+• Grad-CAM for explainable AI visualization
+
+Database:
+Secure database for storing user profiles, health records, reports, and scan metadata.
+
+Deployment:
+Designed for web, PWA, and mobile app scalability.
+
+
+FOOTER TEXT:
+
+Footer Line:
+MediQ © 2026 — AI-powered health screening for better care.
+
+Footer Disclaimer:
+This platform provides preliminary screening only and does not constitute medical advice.
