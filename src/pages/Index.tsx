@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState, useRef } from "react";
 import { MediqIcon } from "@/components/ui/MediqIcon";
 import { PatientReferrals } from "@/features/dashboard/components/PatientReferrals";
+import { HealthChain } from "@/components/dashboard/HealthChain";
 import { fetchWithAuth } from "@/services/api";
 import { cn } from "@/utils";
 import { Avatar as UserAvatar } from "@/components/Avatar";
@@ -408,6 +409,7 @@ const Index = () => {
           <>
             {console.log("ðŸ¥ Index.tsx: Rendering PatientReferrals with health_id:", userProfile.health_id)}
             <PatientReferrals patientId={userProfile.health_id} />
+            <HealthChain patientId={userProfile.health_id} />
           </>
         )}
 

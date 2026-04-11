@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ShieldCheck, Wallet } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { fetchWithAuth } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { fetchWithAuth } from "@/services/api";
+import { cn } from "@/utils";
 
 interface ChainBlock {
   block_id: string;

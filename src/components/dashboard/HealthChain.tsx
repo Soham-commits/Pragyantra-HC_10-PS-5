@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, CornerDownRight, Link2 } from "lucide-react";
 
-import { fetchWithAuth } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { fetchWithAuth } from "@/services/api";
+import { cn } from "@/utils";
 
 interface ChainBlock {
   block_id: string;
@@ -34,10 +34,31 @@ const truncateHash = (value: string) => {
   return `${value.slice(0, 8)}...`;
 };
 
+const parseChainTimestamp = (raw: string) => {
+  if (!raw) return new Date(NaN);
+
+  const value = raw.trim();
+  if (/^\d+$/.test(value)) {
+    const numeric = Number(value);
+    const ms = numeric < 1_000_000_000_000 ? numeric * 1000 : numeric;
+    return new Date(ms);
+  }
+
+  if (/Z$|[+-]\d{2}:?\d{2}$/.test(value)) {
+    return new Date(value);
+  }
+
+  return new Date(`${value}Z`);
+};
+
 const formatDate = (raw: string) => {
-  const date = new Date(raw);
+  const date = parseChainTimestamp(raw);
   if (Number.isNaN(date.getTime())) return "Unknown date";
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 };
 
 export function HealthChain({ patientId }: { patientId: string }) {
