@@ -1,0 +1,38 @@
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+motor==3.6.0
+pydantic==2.9.2
+pydantic-settings==2.6.0
+email-validator==2.1.0
+certifi
+python-jose[cryptography]==3.3.0
+cryptography>=44.0.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.17
+python-dotenv==1.0.1
+reportlab==4.2.5
+pillow==11.0.0
+httpx==0.27.2
+aiohttp==3.9.1
+
+# AI/ML - Using ONNX Runtime (lightweight, ~50MB vs TensorFlow ~400MB)
+onnxruntime  # Cross-platform ML inference
+
+# AI/LLM Providers (optional - install as needed)
+# Uncomment the provider you want to use:
+# openai>=1.0.0                    # For OpenAI GPT models
+# google-generativeai>=0.3.0       # For Google Gemini models
+
+# Streaming support
+sse-starlette>=1.6.0
+
+# RAG/Vector Database
+pinecone-client>=3.0.0           # Pinecone cloud vector database
+
+# Embeddings (choose one):
+sentence-transformers>=2.5.0     # Option 1: Local embeddings (heavier but free)
+# openai>=1.0.0                  # Option 2: OpenAI embeddings (lightweight, API-based, paid)
+
+langchain>=0.1.0                 # LangChain for RAG orchestration (optional)
+langchain-community>=0.0.20      # Community integrations
+langchain-pinecone>=0.1.0        # Pinecone integration for LangChain
