@@ -23,9 +23,95 @@ from app.services.health_chain_service import hash_and_chain_report
 from datetime import datetime
 from typing import List, Optional
 import logging
+import asyncio
 
 router = APIRouter(prefix="/api/doctor", tags=["Doctor"])
 logger = logging.getLogger(__name__)
+
+
+def _parse_age(value) -> Optional[int]:
+    if value is None:
+        return None
+    try:
+        parsed = int(float(value))
+        return parsed if parsed >= 0 else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _parse_gender(value) -> Optional[str]:
+    if value is None:
+        return None
+    text = str(value).strip().lower()
+    aliases = {
+        "m": "male",
+        "male": "male",
+        "f": "female",
+        "female": "female",
+        "o": "other",
+        "other": "other",
+        "non-binary": "other",
+        "nonbinary": "other",
+    }
+    return aliases.get(text)
+
+
+def _parse_blood_group(value) -> Optional[str]:
+    if value is None:
+        return None
+    text = str(value).strip().upper().replace(" ", "")
+    aliases = {
+        "A_POS": "A+",
+        "A_NEG": "A-",
+        "B_POS": "B+",
+        "B_NEG": "B-",
+        "AB_POS": "AB+",
+        "AB_NEG": "AB-",
+        "O_POS": "O+",
+        "O_NEG": "O-",
+    }
+    normalized = aliases.get(text, text)
+    return normalized if normalized in {"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"} else None
+
+
+async def _build_patient_summary(
+    patient: dict,
+    scans_collection,
+    appointments_collection,
+    reports_collection,
+) -> Optional[PatientSummary]:
+    health_id = patient.get("health_id")
+    if not health_id:
+        return None
+
+    total_scans_task = scans_collection.count_documents({"health_id": health_id})
+    total_appointments_task = appointments_collection.count_documents({"health_id": health_id})
+    pending_appointments_task = appointments_collection.count_documents(
+        {"health_id": health_id, "status": AppointmentStatus.SCHEDULED}
+    )
+    last_report_task = reports_collection.find_one(
+        {"health_id": health_id},
+        sort=[("generated_date", -1)],
+    )
+
+    total_scans, total_appointments, pending_appointments, last_report = await asyncio.gather(
+        total_scans_task,
+        total_appointments_task,
+        pending_appointments_task,
+        last_report_task,
+    )
+
+    return PatientSummary(
+        health_id=health_id,
+        full_name=patient.get("full_name") or "Unknown Patient",
+        age=_parse_age(patient.get("age")),
+        gender=_parse_gender(patient.get("gender")),
+        blood_group=_parse_blood_group(patient.get("blood_group")),
+        last_visit_date=(last_report or {}).get("generated_date"),
+        total_scans=total_scans,
+        total_appointments=total_appointments,
+        pending_appointments=pending_appointments,
+    )
 
 
 def is_abnormal_scan(scan: dict) -> bool:
@@ -771,52 +857,34 @@ async def get_recent_patients(
     appointments_collection = get_appointments_collection()
     reports_collection = get_medical_reports_collection()
     
-    # Get recent scans to find active patients
-    recent_scans = await scans_collection.find({}).sort("upload_date", -1).limit(50).to_list(length=50)
-    recent_health_ids = list(dict.fromkeys([scan["health_id"] for scan in recent_scans]))[:limit]
-    
+    # Prefer activity-based recency and gracefully fall back when one source is sparse.
+    recent_scans = await scans_collection.find({}, {"health_id": 1}).sort("upload_date", -1).limit(100).to_list(length=100)
+    recent_appointments = await appointments_collection.find({}, {"health_id": 1}).sort("appointment_date", -1).limit(100).to_list(length=100)
+    recent_reports = await reports_collection.find({}, {"health_id": 1}).sort("generated_date", -1).limit(100).to_list(length=100)
+
+    merged_ids: list[str] = []
+    for source in (recent_scans, recent_appointments, recent_reports):
+        for row in source:
+            health_id = row.get("health_id")
+            if health_id:
+                merged_ids.append(health_id)
+
+    recent_health_ids = list(dict.fromkeys(merged_ids))[:limit]
+    if not recent_health_ids:
+        return []
+
     patients_cursor = health_profiles_collection.find({"health_id": {"$in": recent_health_ids}})
     patients = await patients_cursor.to_list(length=limit)
-    
-    # For each patient, get statistics
-    patient_summaries = []
-    for patient in patients:
-        health_id = patient["health_id"]
-        
-        # Get total scans
-        total_scans = await scans_collection.count_documents({"health_id": health_id})
-        
-        # Get total appointments
-        total_appointments = await appointments_collection.count_documents({"health_id": health_id})
-        
-        # Get pending appointments
-        pending_appointments = await appointments_collection.count_documents({
-            "health_id": health_id,
-            "status": AppointmentStatus.SCHEDULED
-        })
-        
-        # Get last visit date from reports
-        last_report = await reports_collection.find_one(
-            {"health_id": health_id},
-            sort=[("generated_date", -1)]
-        )
-        last_visit_date = last_report["generated_date"] if last_report else None
-        
-        patient_summaries.append(
-            PatientSummary(
-                health_id=health_id,
-                full_name=patient["full_name"],
-                age=patient["age"],
-                gender=patient["gender"],
-                blood_group=patient["blood_group"],
-                last_visit_date=last_visit_date,
-                total_scans=total_scans,
-                total_appointments=total_appointments,
-                pending_appointments=pending_appointments
-            )
-        )
-    
-    return patient_summaries
+    patients_by_id = {patient.get("health_id"): patient for patient in patients if patient.get("health_id")}
+    ordered_patients = [patients_by_id[health_id] for health_id in recent_health_ids if health_id in patients_by_id]
+
+    summaries = await asyncio.gather(
+        *[
+            _build_patient_summary(patient, scans_collection, appointments_collection, reports_collection)
+            for patient in ordered_patients
+        ]
+    )
+    return [summary for summary in summaries if summary is not None]
 
 
 @router.get("/patients/search", response_model=List[PatientSummary])
@@ -842,48 +910,16 @@ async def search_patients(
         ]
     }
     
-    patients_cursor = health_profiles_collection.find(search_query).limit(limit)
+    patients_cursor = health_profiles_collection.find(search_query).sort("updated_at", -1).limit(limit)
     patients = await patients_cursor.to_list(length=limit)
-    
-    # For each patient, get statistics
-    patient_summaries = []
-    for patient in patients:
-        health_id = patient["health_id"]
-        
-        # Get total scans
-        total_scans = await scans_collection.count_documents({"health_id": health_id})
-        
-        # Get total appointments
-        total_appointments = await appointments_collection.count_documents({"health_id": health_id})
-        
-        # Get pending appointments
-        pending_appointments = await appointments_collection.count_documents({
-            "health_id": health_id,
-            "status": AppointmentStatus.SCHEDULED
-        })
-        
-        # Get last visit date from reports
-        last_report = await reports_collection.find_one(
-            {"health_id": health_id},
-            sort=[("generated_date", -1)]
-        )
-        last_visit_date = last_report["generated_date"] if last_report else None
-        
-        patient_summaries.append(
-            PatientSummary(
-                health_id=health_id,
-                full_name=patient["full_name"],
-                age=patient["age"],
-                gender=patient["gender"],
-                blood_group=patient["blood_group"],
-                last_visit_date=last_visit_date,
-                total_scans=total_scans,
-                total_appointments=total_appointments,
-                pending_appointments=pending_appointments
-            )
-        )
-    
-    return patient_summaries
+
+    summaries = await asyncio.gather(
+        *[
+            _build_patient_summary(patient, scans_collection, appointments_collection, reports_collection)
+            for patient in patients
+        ]
+    )
+    return [summary for summary in summaries if summary is not None]
 
 
 @router.get("/patients/{health_id}/details")

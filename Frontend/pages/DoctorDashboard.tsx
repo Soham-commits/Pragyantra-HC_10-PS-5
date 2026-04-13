@@ -9,9 +9,9 @@ import { Avatar as UserAvatar } from "@/components/Avatar";
 interface PatientSummary {
   health_id: string;
   full_name: string;
-  age: number;
-  gender: string;
-  blood_group: string;
+  age?: number | null;
+  gender?: string | null;
+  blood_group?: string | null;
   last_visit_date?: string | null;
   total_scans: number;
 }
@@ -109,10 +109,12 @@ export default function DoctorDashboard() {
           throw new Error("Failed to fetch patients");
         }
         const data = await response.json();
-        setPatientResults(data);
+        setPatientResults(Array.isArray(data) ? data : []);
+        setError("");
       } catch (err) {
         console.error("Fetch error:", err);
         setPatientResults([]);
+        setError("Load failed");
       } finally {
         setSearchLoading(false);
       }
@@ -129,53 +131,68 @@ export default function DoctorDashboard() {
       try {
         // First, verify the user's role
         const authResponse = await fetchWithAuth("/api/auth/profile");
-        if (authResponse.ok) {
-          const authData = await authResponse.json();
-
-          if (authData.role !== "doctor") {
-            console.error("âŒ User is not a doctor, role:", authData.role);
-            setError("Access denied: Doctor role required");
-            setLoading(false);
-            return;
-          }
+        if (!authResponse.ok) {
+          setError("Load failed");
+          setLoading(false);
+          return;
         }
 
-        const [statsResponse, patientsResponse, profileResponse] = await Promise.all([
+        const authData = await authResponse.json();
+        if (authData.role !== "doctor" && authData.role !== "specialist") {
+          console.error("DoctorDashboard access denied, role:", authData.role);
+          setError("Access denied: Doctor role required");
+          setLoading(false);
+          return;
+        }
+
+        const [statsResult, patientsResult, profileResult] = await Promise.allSettled([
           fetchWithAuth("/api/doctor/dashboard/stats"),
           fetchWithAuth("/api/doctor/patients/recent?limit=10"),
           fetchWithAuth("/api/doctor/profile"),
         ]);
 
-        if (!statsResponse.ok) {
-          throw new Error("Failed to load summary counts");
+        if (statsResult.status === "fulfilled" && statsResult.value.ok) {
+          const statsData = await statsResult.value.json();
+          setSummary({
+            total_screenings: statsData.total_screenings ?? 0,
+            abnormal_cases: statsData.abnormal_cases ?? 0,
+            pending_reviews: statsData.pending_reviews ?? 0,
+            reviewed_cases: statsData.reviewed_cases ?? 0,
+            followup_cases: statsData.followup_cases ?? 0,
+          });
+        } else {
+          // Keep defaults and continue rendering patients even if stats endpoint is flaky.
+          setSummary({
+            total_screenings: 0,
+            abnormal_cases: 0,
+            pending_reviews: 0,
+            reviewed_cases: 0,
+            followup_cases: 0,
+          });
         }
 
-        if (!patientsResponse.ok) {
-          throw new Error("Failed to load recent patients");
+        if (patientsResult.status === "fulfilled" && patientsResult.value.ok) {
+          const patientsData = await patientsResult.value.json();
+          setPatientResults(Array.isArray(patientsData) ? patientsData : []);
+        } else {
+          setPatientResults([]);
+          setError("Load failed");
         }
 
-        const statsData = await statsResponse.json();
-        const patientsData = await patientsResponse.json();
-        const profileData = profileResponse.ok ? await profileResponse.json() : null;
+        if (profileResult.status === "fulfilled" && profileResult.value.ok) {
+          const profileData = await profileResult.value.json();
+          setDoctorProfile(profileData);
 
-        setSummary({
-          total_screenings: statsData.total_screenings ?? 0,
-          abnormal_cases: statsData.abnormal_cases ?? 0,
-          pending_reviews: statsData.pending_reviews ?? 0,
-          reviewed_cases: statsData.reviewed_cases ?? 0,
-          followup_cases: statsData.followup_cases ?? 0,
-        });
-        setPatientResults(patientsData);
-        setDoctorProfile(profileData);
-
-        // Update doctor name if we got it from the profile and it's not already set
-        if (profileData?.full_name) {
-          const cleanName = profileData.full_name.replace(/^(Dr\.?\s*)/i, '');
-          setDoctorName(cleanName);
-          localStorage.setItem('doctor_name', cleanName);
+          // Update doctor name if we got it from the profile and it's not already set
+          if (profileData?.full_name) {
+            const cleanName = profileData.full_name.replace(/^(Dr\.?\s*)/i, '');
+            setDoctorName(cleanName);
+            localStorage.setItem('doctor_name', cleanName);
+          }
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load dashboard data");
+        console.error("DoctorDashboard load error:", err);
+        setError("Load failed");
       } finally {
         setLoading(false);
       }
@@ -365,11 +382,11 @@ export default function DoctorDashboard() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-600">
-                    {patient.age} yrs / {patient.gender}
+                    {(patient.age ?? "N/A")}{patient.age != null ? " yrs" : ""} / {patient.gender || "N/A"}
                   </td>
                   <td className="px-6 py-4">
                     <span className="px-2 py-1 bg-red-50 text-red-700 rounded text-xs font-medium">
-                      {patient.blood_group}
+                      {patient.blood_group || "N/A"}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-gray-600">{patient.total_scans}</td>

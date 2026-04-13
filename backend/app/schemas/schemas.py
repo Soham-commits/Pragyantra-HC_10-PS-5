@@ -215,9 +215,9 @@ class AppointmentNotesResponse(BaseModel):
 class PatientSummary(BaseModel):
     health_id: str
     full_name: str
-    age: int
-    gender: Gender
-    blood_group: BloodGroup
+    age: Optional[int] = None
+    gender: Optional[Gender] = None
+    blood_group: Optional[BloodGroup] = None
     last_visit_date: Optional[datetime] = None
     total_scans: int = 0
     total_appointments: int = 0

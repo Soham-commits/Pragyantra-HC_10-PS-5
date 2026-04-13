@@ -426,7 +426,7 @@ export function ReferralPanel({ patientId, scans, prefillSpecialistName }: Refer
                       setSearchQuery(e.target.value);
                       if (selectedSpecialist) setSelectedSpecialist(null);
                     }}
-                    placeholder="Search by name, specialty, or hospitalâ€¦"
+                    placeholder="Search by name, specialty, hospital, email, or doctor ID"
                     className="pl-9 pr-8 text-xs md:text-sm"
                     disabled={!!selectedSpecialist}
                   />
@@ -467,6 +467,9 @@ export function ReferralPanel({ patientId, scans, prefillSpecialistName }: Refer
                               <p className="text-[10px] md:text-xs text-gray-500 mt-0.5 truncate">
                                 {s.specialty} Â· {s.hospital_name}, {s.city}
                               </p>
+                              <p className="text-[10px] md:text-xs text-gray-400 mt-0.5 truncate">
+                                ID: {s.specialist_id} | {s.contact || "N/A"}
+                              </p>
                             </div>
                           </div>
                         </button>
@@ -505,6 +508,9 @@ export function ReferralPanel({ patientId, scans, prefillSpecialistName }: Refer
                             <p className="text-[10px] md:text-xs text-indigo-600/80 mt-0.5 truncate">
                               {s.specialty} Â· {s.hospital_name}, {s.city}
                             </p>
+                            <p className="text-[10px] md:text-xs text-indigo-700/70 mt-0.5 truncate">
+                              ID: {s.specialist_id} | {s.contact || "N/A"}
+                            </p>
                           </div>
                         </div>
                       </button>
@@ -522,6 +528,9 @@ export function ReferralPanel({ patientId, scans, prefillSpecialistName }: Refer
                   <p className="text-[10px] md:text-xs text-indigo-600 mt-0.5">
                     {selectedSpecialist.specialty} Â· {selectedSpecialist.hospital_name},{" "}
                     {selectedSpecialist.city}
+                  </p>
+                  <p className="text-[10px] md:text-xs text-indigo-700/80 mt-0.5">
+                    ID: {selectedSpecialist.specialist_id} | {selectedSpecialist.contact || "N/A"}
                   </p>
                 </div>
               )}

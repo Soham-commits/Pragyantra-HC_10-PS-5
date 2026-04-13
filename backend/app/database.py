@@ -3,6 +3,7 @@ from app.config import settings
 from typing import Optional
 import certifi
 import re
+from urllib.parse import parse_qs, urlparse
 
 client: Optional[AsyncIOMotorClient] = None
 
@@ -10,6 +11,17 @@ client: Optional[AsyncIOMotorClient] = None
 def _redact_mongo_url(url: str) -> str:
     # Redact credentials in MongoDB URIs: mongodb://user:pass@host -> mongodb://user:***@host
     return re.sub(r"^(mongodb(?:\+srv)?://)([^/@:]+):([^@]+)@", r"\1\2:***@", url)
+
+
+def _should_use_tls(mongo_url: str) -> bool:
+    """Enable TLS only when the URI requires it (Atlas/SRV or explicit tls/ssl=true)."""
+    if mongo_url.startswith("mongodb+srv://"):
+        return True
+
+    parsed = urlparse(mongo_url)
+    params = parse_qs(parsed.query)
+    tls_param = (params.get("tls") or params.get("ssl") or [""])[0].lower()
+    return tls_param in {"true", "1", "yes"}
 
 
 async def connect_to_mongo():
@@ -21,13 +33,15 @@ async def connect_to_mongo():
     """
     global client
     try:
-        # Use certifi for SSL certificate verification (safe for both SRV + TLS setups).
-        mongo = AsyncIOMotorClient(
-            settings.MONGODB_URL,
-            tlsCAFile=certifi.where(),
-            serverSelectionTimeoutMS=3000,
-            connectTimeoutMS=3000,
-        )
+        client_kwargs = {
+            "serverSelectionTimeoutMS": 3000,
+            "connectTimeoutMS": 3000,
+        }
+        if _should_use_tls(settings.MONGODB_URL):
+            # Use certifi for TLS certificate verification (Atlas/SRV/explicit TLS setups).
+            client_kwargs["tlsCAFile"] = certifi.where()
+
+        mongo = AsyncIOMotorClient(settings.MONGODB_URL, **client_kwargs)
         # Force a connection attempt during startup so we can fail gracefully.
         await mongo.admin.command("ping")
         client = mongo

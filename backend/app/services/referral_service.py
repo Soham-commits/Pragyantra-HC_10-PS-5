@@ -49,6 +49,8 @@ async def search_specialists(query: str) -> list:
             {"full_name": regex},
             {"specialization": regex},
             {"hospital_affiliation": regex},
+            {"email": regex},
+            {"doctor_id": regex},
         ]}
     else:
         qfilter = {}
@@ -68,6 +70,8 @@ async def search_specialists(query: str) -> list:
                 {"name": sregex},
                 {"specialty": sregex},
                 {"hospital_name": sregex},
+                {"contact": sregex},
+                {"specialist_id": sregex},
             ]}
         else:
             sfilter = {}
