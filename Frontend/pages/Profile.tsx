@@ -17,6 +17,7 @@ import { cn } from "@/utils";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchWithAuth, profileApi } from "@/services/api";
+import { HealthWalletCard } from "@/components/profile/HealthWalletCard";
 import { useTranslation } from "react-i18next";
 
 interface UserProfile {
@@ -24,6 +25,7 @@ interface UserProfile {
   full_name: string;
   email: string;
   onboarded: boolean;
+  wallet_address?: string;
   phone?: string;
   date_of_birth?: string;
   age?: number;
@@ -756,6 +758,15 @@ export default function Profile() {
             <p className="text-xs text-gray-600 mt-1">{t('profile.chats')}</p>
           </div>
         </div>
+
+        {userProfile?.health_id && (
+          <>
+            <HealthWalletCard
+              patientId={userProfile.health_id}
+              walletAddress={userProfile.wallet_address}
+            />
+          </>
+        )}
 
         {/* Profile Info Card */}
         {userProfile?.onboarded && (

@@ -1,11 +1,12 @@
 ﻿import { FloatingNav } from "@/layouts/FloatingNav";
 import { Footer } from "@/layouts/Footer";
-import { MessageCircle, Mic, Bell, Heart, Star, Award, Activity, Droplet, Scan, FileText, Send, Thermometer, Pill, Brain, Stethoscope, HeartPulse, LogOut, IdCard, Cake, BookOpen, HelpCircle, Newspaper, Eye, Ear, Bone, Zap, Wind, Apple, Shield, CheckCircle, X, CalendarCheck } from "lucide-react";
+import { MessageCircle, Mic, Bell, Heart, Star, Award, Activity, Droplet, Scan, FileText, Send, Thermometer, Pill, Brain, Stethoscope, HeartPulse, LogOut, IdCard, Cake, BookOpen, HelpCircle, Newspaper, Eye, Ear, Bone, Zap, Wind, Apple, Shield, CheckCircle, X, CalendarCheck, Wallet } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useRef } from "react";
 import { MediqIcon } from "@/components/ui/MediqIcon";
 import { PatientReferrals } from "@/features/dashboard/components/PatientReferrals";
+import { HealthChain } from "@/components/dashboard/HealthChain";
 import { fetchWithAuth } from "@/services/api";
 import { cn } from "@/utils";
 import { Avatar as UserAvatar } from "@/components/Avatar";
@@ -230,6 +231,16 @@ const Index = () => {
             </div>
 
             <UserAvatar name={userProfile?.full_name} role="patient" seed={userProfile?.health_id} size="md" />
+            <Link to="/profile" title="Wallet">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 hover:bg-emerald-100 rounded-full"
+                aria-label="Open wallet"
+              >
+                <Wallet className="h-5 w-5 text-emerald-700" />
+              </Button>
+            </Link>
             <Button
               variant="ghost"
               size="icon"
@@ -408,6 +419,7 @@ const Index = () => {
           <>
             {console.log("ðŸ¥ Index.tsx: Rendering PatientReferrals with health_id:", userProfile.health_id)}
             <PatientReferrals patientId={userProfile.health_id} />
+            <HealthChain patientId={userProfile.health_id} />
           </>
         )}
 
